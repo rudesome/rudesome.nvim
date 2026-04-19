@@ -21,11 +21,11 @@ jobs:
       - name: build and push
         run: |
           nix run github:zhaofengli/attic#default -- \
-            login cache https://cache.rudesome.nl ${{ secrets.ATTIC_TOKEN }}
-          nix run github:zhaofengli/attic#default -- watch-store cache &
+            login system https://cache.rudesome.nl ${{ secrets.ATTIC_TOKEN }}
+          nix run github:zhaofengli/attic#default -- watch-store system &
           WATCH_PID=$!
           nix build '.#packages.x86_64-linux.${{ matrix.package }}'
-          nix run github:zhaofengli/attic#default -- push cache result -j 2
+          nix run github:zhaofengli/attic#default -- push system result -j 2
           kill $WATCH_PID || true
 
   build-darwin:
@@ -61,9 +61,9 @@ jobs:
         run: |
           ulimit -n 524288 || true
           nix run github:zhaofengli/attic#default -- \
-            login cache https://cache.rudesome.nl ${{ secrets.ATTIC_TOKEN }}
-          nix run github:zhaofengli/attic#default -- watch-store cache &
+            login system https://cache.rudesome.nl ${{ secrets.ATTIC_TOKEN }}
+          nix run github:zhaofengli/attic#default -- watch-store system &
           WATCH_PID=$!
           nix build '.#packages.aarch64-darwin.${{ matrix.package }}'
-          nix run github:zhaofengli/attic#default -- push cache result -j 2
+          nix run github:zhaofengli/attic#default -- push system result -j 2
           kill $WATCH_PID || true
