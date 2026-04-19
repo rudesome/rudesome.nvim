@@ -1,0 +1,72 @@
+name: build
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+jobs:
+  build-linux:
+    runs-on: nix-builder
+    strategy:
+      fail-fast: false
+      matrix:
+        package:
+          - default
+          - neovim
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: build and push
+        run: |
+          nix run github:zhaofengli/attic#default -- \
+            login cache https://cache.rudesome.nl ${{ secrets.ATTIC_TOKEN }}
+          nix run github:zhaofengli/attic#default -- watch-store cache &
+          WATCH_PID=$!
+          nix build '.#packages.x86_64-linux.${{ matrix.package }}'
+          nix run github:zhaofengli/attic#default -- push cache result -j 2
+          kill $WATCH_PID || true
+
+  #build-darwin:
+    #runs-on: macos-latest
+    #strategy:
+      #fail-fast: false
+      #matrix:
+        #package:
+          #- default
+          #- neovim
+    #steps:
+      #- uses: actions/checkout@v4
+
+      ## Write netrc BEFORE installing nix so the daemon can use it for
+      ## substitution from the private cache. Also raise the open-files
+      ## limit for the whole job to avoid attic watch-store hitting EMFILE.
+      #- name: Configure netrc and raise file descriptor limit
+        #run: |
+          #sudo mkdir -p /etc/nix
+          #echo "machine cache.rudesome.nl password ${{ secrets.ATTIC_TOKEN }}" | sudo tee /etc/nix/netrc > /dev/null
+          #sudo chmod 0644 /etc/nix/netrc
+          #sudo launchctl limit maxfiles 524288 524288 || true
+          #ulimit -n 524288 || true
+
+      #- uses: DeterminateSystems/nix-installer-action@main
+        #with:
+          #extra-conf: |
+            #fallback = true
+            #http-connections = 128
+            #max-substitution-jobs = 128
+            #netrc-file = /etc/nix/netrc
+            #substituters = https://cache.nixos.org/ https://cache.rudesome.nl/cache?priority=41 https://nix-community.cachix.org?priority=42
+            #trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY= cache:0UG+UbMLj/J2tjb1flhKAmtwriVygAzqI9/N/0jzD/I= nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs=
+
+      #- name: build and push
+        #run: |
+          #ulimit -n 524288 || true
+          #nix run github:zhaofengli/attic#default -- \
+            #login cache https://cache.rudesome.nl ${{ secrets.ATTIC_TOKEN }}
+          #nix run github:zhaofengli/attic#default -- watch-store cache &
+          #WATCH_PID=$!
+          #nix build '.#packages.aarch64-darwin.${{ matrix.package }}'
+          #nix run github:zhaofengli/attic#default -- push cache result -j 2
+          #kill $WATCH_PID || true
