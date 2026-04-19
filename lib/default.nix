@@ -46,10 +46,11 @@ in rec {
         cmp-path
         cmp-tabnine
         cmp-treesitter
-        cmp-vsnip
+        friendly-snippets   # VSCode-style snippet collection for LuaSnip
         lspkind-nvim
+        luasnip             # snippet engine (replaces vsnip)
+        cmp_luasnip         # luasnip source for nvim-cmp
         nvim-cmp
-        vim-vsnip
 
         # telescope
         plenary-nvim
@@ -64,7 +65,7 @@ in rec {
         # extras
         compile-mode
         gitsigns-nvim
-        harpoon
+        harpoon2            # harpoon v2 (Telescope-free, cleaner API)
         lualine-nvim
         nerdcommenter
         nui-nvim

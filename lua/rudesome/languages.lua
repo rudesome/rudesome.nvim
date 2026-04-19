@@ -1,205 +1,241 @@
---local lspconfig = require 'lspconfig'
-local treesitter = require 'nvim-treesitter.configs'
-local treesitter_context = require 'treesitter-context'
+-- ============================================================
+-- LSP configuration
+-- ============================================================
+-- Treesitter is configured separately in treesitter.lua.
+-- This module only handles LSP servers and diagnostics.
 
-local function autocmd(args)
-  local event = args[1]
-  local group = args[2]
-  local callback = args[3]
-
-  vim.api.nvim_create_autocmd(event, {
-    group = group,
-    buffer = args[4],
-    callback = function()
-      callback()
-    end,
-    once = args.once,
-  })
-end
-
+-- ------------------------------------------------------------
+-- Shared LSP on_attach
+-- ------------------------------------------------------------
 local function on_attach(client, bufnr)
-  local augroup_highlight = vim.api.nvim_create_augroup("custom-lsp-references", { clear = true })
-  local autocmd_clear = vim.api.nvim_clear_autocmds
+  local map     = vim.keymap.set
+  local buf     = { buffer = bufnr, silent = true }
 
-  local bufopts = { buffer = bufnr, remap = false }
+  -- Navigation
+  map("n", "gD",         vim.lsp.buf.declaration,    vim.tbl_extend("force", buf, { desc = "LSP declaration" }))
+  map("n", "gd",         vim.lsp.buf.definition,     vim.tbl_extend("force", buf, { desc = "LSP definition" }))
+  map("n", "gi",         vim.lsp.buf.implementation, vim.tbl_extend("force", buf, { desc = "LSP implementation" }))
+  map("n", "gr",         vim.lsp.buf.references,     vim.tbl_extend("force", buf, { desc = "LSP references" }))
+  map("n", "gy",         vim.lsp.buf.type_definition,vim.tbl_extend("force", buf, { desc = "LSP type definition" }))
 
-  vim.keymap.set('n', 'gD', vim.lsp.buf.declaration, bufopts)
-  vim.keymap.set('n', 'gd', vim.lsp.buf.definition, bufopts)
-  vim.keymap.set('n', 'K', vim.lsp.buf.hover, bufopts)
-  vim.keymap.set('n', 'gi', vim.lsp.buf.implementation, bufopts)
-  vim.keymap.set('n', '<C-k>', vim.lsp.buf.signature_help, bufopts)
-  vim.keymap.set('n', '<space>wa', vim.lsp.buf.add_workspace_folder, bufopts)
-  vim.keymap.set('n', '<space>wr', vim.lsp.buf.remove_workspace_folder, bufopts)
-  vim.keymap.set('n', '<space>wl', function()
+  -- Hover / signature
+  map("n", "K",          vim.lsp.buf.hover,          vim.tbl_extend("force", buf, { desc = "LSP hover" }))
+  map("n", "<C-k>",      vim.lsp.buf.signature_help, vim.tbl_extend("force", buf, { desc = "LSP signature help" }))
+  map("i", "<C-k>",      vim.lsp.buf.signature_help, vim.tbl_extend("force", buf, { desc = "LSP signature help" }))
+
+  -- Code actions / rename / format
+  map("n", "<leader>rn", vim.lsp.buf.rename,         vim.tbl_extend("force", buf, { desc = "LSP rename" }))
+  map("n", "<leader>ca", vim.lsp.buf.code_action,    vim.tbl_extend("force", buf, { desc = "LSP code action" }))
+  map("v", "<leader>ca", vim.lsp.buf.code_action,    vim.tbl_extend("force", buf, { desc = "LSP code action (range)" }))
+  map("n", "<leader>f",  function()
+    vim.lsp.buf.format({ async = true })
+  end, vim.tbl_extend("force", buf, { desc = "LSP format" }))
+
+  -- Workspace folders
+  map("n", "<leader>wa", vim.lsp.buf.add_workspace_folder,    vim.tbl_extend("force", buf, { desc = "Add workspace folder" }))
+  map("n", "<leader>wr", vim.lsp.buf.remove_workspace_folder, vim.tbl_extend("force", buf, { desc = "Remove workspace folder" }))
+  map("n", "<leader>wl", function()
     print(vim.inspect(vim.lsp.buf.list_workspace_folders()))
-  end, bufopts)
-  vim.keymap.set('n', '<space>D', vim.lsp.buf.type_definition, bufopts)
-  vim.keymap.set('n', '<space>rn', vim.lsp.buf.rename, bufopts)
-  vim.keymap.set('n', '<space>ca', vim.lsp.buf.code_action, bufopts)
-  vim.keymap.set('n', 'gr', vim.lsp.buf.references, bufopts)
-  vim.keymap.set('n', '<space>f', function() vim.lsp.buf.format { async = true } end, bufopts)
+  end, vim.tbl_extend("force", buf, { desc = "List workspace folders" }))
 
+  -- Document highlight (if server supports it)
   if client.server_capabilities.documentHighlightProvider then
-    autocmd_clear { group = augroup_highlight, buffer = bufnr }
-    autocmd { "CursorHold", augroup_highlight, vim.lsp.buf.document_highlight, bufnr }
-    autocmd { "CursorMoved", augroup_highlight, vim.lsp.buf.clear_references, bufnr }
+    local augroup = vim.api.nvim_create_augroup("lsp_document_highlight_" .. bufnr, { clear = true })
+
+    vim.api.nvim_create_autocmd({ "CursorHold", "CursorHoldI" }, {
+      group    = augroup,
+      buffer   = bufnr,
+      callback = vim.lsp.buf.document_highlight,
+    })
+
+    vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI" }, {
+      group    = augroup,
+      buffer   = bufnr,
+      callback = vim.lsp.buf.clear_references,
+    })
   end
 end
 
-local function setup_languages()
-  ---- Diagnostics
-  vim.lsp.handlers["textDocument/publishDiagnostics"] = vim.lsp.with(
-    vim.lsp.diagnostic.on_publish_diagnostics, {
-      --defines error in line via keybinding
-      virtual_text = true,
-      --underline = { severity_limit = "Error" },
-      signs = true,
-      update_in_insert = false,
-    }
-  )
+-- ------------------------------------------------------------
+-- Diagnostics display
+-- ------------------------------------------------------------
+local function setup_diagnostics()
+  local signs = {
+    Error = " ",
+    Warn  = " ",
+    Hint  = " ",
+    Info  = " ",
+  }
+
+  -- Define sign icons (Neovim ≥ 0.10 uses vim.diagnostic.config signs table)
+  for type, icon in pairs(signs) do
+    local hl = "DiagnosticSign" .. type
+    vim.fn.sign_define(hl, { text = icon, texthl = hl, numhl = hl })
+  end
+
+  vim.diagnostic.config({
+    virtual_text = {
+      prefix   = "●",
+      severity = { min = vim.diagnostic.severity.HINT },
+    },
+    signs            = true,
+    underline        = true,
+    update_in_insert = false,
+    severity_sort    = true,
+    float = {
+      focusable = false,
+      style     = "minimal",
+      border    = "rounded",
+      source    = "always",
+      header    = "",
+      prefix    = "",
+    },
+  })
+
+  -- Diagnostic navigation
+  local map = vim.keymap.set
+  map("n", "<leader>e", vim.diagnostic.open_float, { desc = "Open diagnostic float" })
+  map("n", "[d",        vim.diagnostic.goto_prev,  { desc = "Prev diagnostic" })
+  map("n", "]d",        vim.diagnostic.goto_next,  { desc = "Next diagnostic" })
+  map("n", "<leader>q", vim.diagnostic.setloclist, { desc = "Diagnostic loclist" })
+end
+
+-- ------------------------------------------------------------
+-- Language server definitions
+-- ------------------------------------------------------------
+local function setup_servers()
+  -- Build capabilities table enhanced with nvim-cmp LSP completions
+  local capabilities = vim.lsp.protocol.make_client_capabilities()
+  local ok_cmp, cmp_lsp = pcall(require, "cmp_nvim_lsp")
+  if ok_cmp then
+    capabilities = cmp_lsp.default_capabilities(capabilities)
+  end
 
   local language_servers = {
-    bashls = {},
-    cssls = {},
-    clangd = {},
+    bashls     = {},
+    cssls      = {},
+    clangd     = {},
+
+    -- Python: diagnosticls for formatting, pyright for type-checking
     diagnosticls = {
       filetypes = { "python" },
       init_options = {
-        filetypes = {
-          python = "black"
-        },
-        formatFiletypes = {
-          python = { "black" }
-        },
+        filetypes       = { python = "black" },
+        formatFiletypes = { python = { "black" } },
         formatters = {
           black = {
-            command = "black",
-            args = { "--quiet", "-" },
+            command      = "black",
+            args         = { "--quiet", "-" },
             rootPatterns = { "pyproject.toml" },
           },
         },
-      }
+      },
     },
+
     dhall_lsp_server = {},
-    dockerls = {},
+    dockerls         = {},
+
     gopls = {
       settings = {
         gopls = {
-          gofumpt = true,
+          gofumpt    = true,
+          staticcheck = true,
+          analyses   = {
+            unusedparams = true,
+          },
         },
       },
     },
-    html = {},
+
+    html   = {},
     jsonls = {},
     jsonnet_ls = {},
+
     lua_ls = {
       settings = {
         Lua = {
-          diagnostics = {
-            globals = { 'vim' }
+          runtime     = { version = "LuaJIT" },
+          diagnostics = { globals = { "vim" } },
+          workspace   = {
+            library          = vim.api.nvim_get_runtime_file("", true),
+            checkThirdParty  = false,
           },
-          runtime = {
-            version = 'LuaJIT',
-          },
-          telemetry = {
-            enable = false,
-          },
-          workspace = {
-            library = vim.api.nvim_get_runtime_file("", true),
-          },
+          telemetry   = { enable = false },
+          format      = { enable = false }, -- let stylua handle formatting
         },
-      }
+      },
     },
-    marksman = {},
+
+    marksman  = {},
     nickel_ls = {},
+
     nil_ls = {
       settings = {
-        ['nil'] = {
+        ["nil"] = {
           formatting = { command = { "alejandra" } },
           nix = {
             flake = {
-              autoArchive = true,
+              autoArchive        = true,
               autoUpdateLockFile = false,
             },
           },
         },
-      }
+      },
     },
+
     ocamllsp = {},
-    --omnisharp = {
-    --cmd = { "omnisharp", "--languageserver", "--hostPID", tostring(vim.fn.getpid()) },
-    --handlers = {
-    --["textDocument/definition"] = omnisharp_extended.handler,
-    --},
-    --},
+
     postgres_lsp = {},
+
     powershell_es = {
       config = {
-        bundle_path = "/home/rudesome/PowerShellEditorServices"
-      }
+        bundle_path = "/home/rudesome/PowerShellEditorServices",
+      },
     },
+
     pyright = {
       settings = {
         python = {
           analysis = {
-            autoSearchPaths = true,
-            diagnosticMode = "workspace",
-            useLibraryCodeForTypes = true
+            autoSearchPaths  = true,
+            diagnosticMode   = "workspace",
+            useLibraryCodeForTypes = true,
           },
         },
       },
     },
+
     terraformls = {},
-    --ts_ls = {},
+
+    ts_ls = {},
+
     yamlls = {
       settings = {
-        yaml = {
-          keyOrdering = false,
-        },
+        yaml = { keyOrdering = false },
       },
     },
+
     zls = {},
   }
 
-  -- Initialize servers
+  -- Register every server using the modern vim.lsp API
   for server, server_config in pairs(language_servers) do
-    local config = { on_attach = on_attach }
+    local config = vim.tbl_deep_extend("force", {
+      on_attach    = on_attach,
+      capabilities = capabilities,
+    }, server_config)
 
-    if server_config then
-      for k, v in pairs(server_config) do
-        config[k] = v
-      end
-    end
-
-    vim.lsp.enable(server)
     vim.lsp.config(server, config)
+    vim.lsp.enable(server)
   end
-
-  -- Global mappings.
-  -- See `:help vim.diagnostic.*` for documentation on any of the below functions
-  vim.keymap.set('n', '<leader>e', vim.diagnostic.open_float)
-  vim.keymap.set('n', '[d', vim.diagnostic.goto_prev)
-  vim.keymap.set('n', ']d', vim.diagnostic.goto_next)
-  vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist)
-
-  treesitter.setup {
-    auto_install = false,
-    ensure_installed = {},
-    highlight = { enable = true },
-    ignore_install = {},
-    indent = { enable = true },
-    modules = {},
-    rainbow = { enable = true },
-    sync_install = false,
-  }
-
-  treesitter_context.setup()
 end
 
+-- ------------------------------------------------------------
+-- Entry point
+-- ------------------------------------------------------------
 local function init()
-  setup_languages()
+  setup_diagnostics()
+  setup_servers()
 end
 
-return {
-  init = init,
-}
+return { init = init }
