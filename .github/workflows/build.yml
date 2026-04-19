@@ -37,7 +37,7 @@ jobs:
           - default
           - neovim
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Configure netrc and raise file descriptor limit
         run: |
