@@ -1,0 +1,2 @@
+# rudesome.nvim
+Neovim configuration
