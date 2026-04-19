@@ -9,6 +9,6 @@ jobs:
   check:
     runs-on: nix-builder
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: flake check all systems
         run: nix flake check --all-systems
