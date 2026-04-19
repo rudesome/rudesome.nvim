@@ -39,11 +39,8 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - name: Configure netrc and raise file descriptor limit
+      - name: Raise file descriptor limit
         run: |
-          sudo mkdir -p /etc/nix
-          echo "machine cache.rudesome.nl password ${{ secrets.ATTIC_TOKEN }}" | sudo tee /etc/nix/netrc > /dev/null
-          sudo chmod 0644 /etc/nix/netrc
           sudo launchctl limit maxfiles 524288 524288 || true
           ulimit -n 524288 || true
 
@@ -53,17 +50,17 @@ jobs:
             fallback = true
             http-connections = 128
             max-substitution-jobs = 128
-            netrc-file = /etc/nix/netrc
-            substituters = https://cache.nixos.org/ https://cache.rudesome.nl/cache?priority=41 https://nix-community.cachix.org?priority=42
-            trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY= cache:0UG+UbMLj/J2tjb1flhKAmtwriVygAzqI9/N/0jzD/I= nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs=
+            extra-substituters = https://nix-community.cachix.org?priority=42
+            extra-trusted-public-keys = nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs=
 
-      - name: build and push
+      - name: Setup Attic cache
+        uses: ryanccn/attic-action@v0
+        with:
+          endpoint: https://cache.rudesome.nl/
+          cache: cache
+          token: ${{ secrets.ATTIC_TOKEN }}
+
+      - name: build
         run: |
           ulimit -n 524288 || true
-          nix run github:zhaofengli/attic#default -- \
-            login cache https://cache.rudesome.nl ${{ secrets.ATTIC_TOKEN }}
-          nix run github:zhaofengli/attic#default -- watch-store cache &
-          WATCH_PID=$!
           nix build '.#packages.aarch64-darwin.${{ matrix.package }}'
-          nix run github:zhaofengli/attic#default -- push cache result -j 2
-          kill $WATCH_PID || true
