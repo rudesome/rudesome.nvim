@@ -35,9 +35,9 @@ in rec {
         # languages
         nvim-lspconfig
 
-        # treesitter
+        # treesitter (legacy API retains nvim-treesitter.configs module)
         nvim-treesitter-context
-        nvim-treesitter.withAllGrammars
+        nvim-treesitter-legacy.withAllGrammars
 
         # completion
         cmp-buffer
