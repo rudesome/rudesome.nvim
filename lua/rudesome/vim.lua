@@ -108,9 +108,6 @@ local function set_autocmds()
   })
 end
 
--- ------------------------------------------------------------
--- Keymaps  (vim.keymap.set is the preferred modern API)
--- ------------------------------------------------------------
 local function set_keymaps()
   local map = vim.keymap.set
 
@@ -158,9 +155,6 @@ local function set_keymaps()
   map("v", ">", ">gv", { desc = "Indent right and reselect" })
 end
 
--- ------------------------------------------------------------
--- Entry point
--- ------------------------------------------------------------
 local function init()
   set_options()
   set_autocmds()
