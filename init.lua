@@ -1,0 +1,1 @@
+require 'rudesome'.init()
