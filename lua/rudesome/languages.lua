@@ -1,12 +1,3 @@
--- ============================================================
--- LSP configuration
--- ============================================================
--- Treesitter is configured separately in treesitter.lua.
--- This module only handles LSP servers and diagnostics.
-
--- ------------------------------------------------------------
--- Shared LSP on_attach
--- ------------------------------------------------------------
 local function on_attach(client, bufnr)
   local map     = vim.keymap.set
   local buf     = { buffer = bufnr, silent = true }
@@ -56,29 +47,34 @@ local function on_attach(client, bufnr)
   end
 end
 
--- ------------------------------------------------------------
--- Diagnostics display
--- ------------------------------------------------------------
 local function setup_diagnostics()
-  local signs = {
-    Error = " ",
-    Warn  = " ",
-    Hint  = " ",
-    Info  = " ",
-  }
-
-  -- Define sign icons (Neovim ≥ 0.10 uses vim.diagnostic.config signs table)
-  for type, icon in pairs(signs) do
-    local hl = "DiagnosticSign" .. type
-    vim.fn.sign_define(hl, { text = icon, texthl = hl, numhl = hl })
-  end
+  local severity = vim.diagnostic.severity
 
   vim.diagnostic.config({
     virtual_text = {
       prefix   = "●",
-      severity = { min = vim.diagnostic.severity.HINT },
+      severity = { min = severity.HINT },
     },
-    signs            = true,
+    signs = {
+      text = {
+        [severity.ERROR] = " ",
+        [severity.WARN]  = " ",
+        [severity.HINT]  = " ",
+        [severity.INFO]  = " ",
+      },
+      texthl = {
+        [severity.ERROR] = "DiagnosticSignError",
+        [severity.WARN]  = "DiagnosticSignWarn",
+        [severity.HINT]  = "DiagnosticSignHint",
+        [severity.INFO]  = "DiagnosticSignInfo",
+      },
+      numhl = {
+        [severity.ERROR] = "DiagnosticSignError",
+        [severity.WARN]  = "DiagnosticSignWarn",
+        [severity.HINT]  = "DiagnosticSignHint",
+        [severity.INFO]  = "DiagnosticSignInfo",
+      },
+    },
     underline        = true,
     update_in_insert = false,
     severity_sort    = true,
@@ -92,11 +88,15 @@ local function setup_diagnostics()
     },
   })
 
-  -- Diagnostic navigation
+  -- Diagnostic navigation (vim.diagnostic.goto_prev/next are deprecated in 0.11)
   local map = vim.keymap.set
   map("n", "<leader>e", vim.diagnostic.open_float, { desc = "Open diagnostic float" })
-  map("n", "[d",        vim.diagnostic.goto_prev,  { desc = "Prev diagnostic" })
-  map("n", "]d",        vim.diagnostic.goto_next,  { desc = "Next diagnostic" })
+  map("n", "[d", function()
+    vim.diagnostic.jump({ count = -1, float = true })
+  end, { desc = "Prev diagnostic" })
+  map("n", "]d", function()
+    vim.diagnostic.jump({ count = 1, float = true })
+  end, { desc = "Next diagnostic" })
   map("n", "<leader>q", vim.diagnostic.setloclist, { desc = "Diagnostic loclist" })
 end
 
@@ -116,7 +116,6 @@ local function setup_servers()
     cssls      = {},
     clangd     = {},
 
-    -- Python: diagnosticls for formatting, pyright for type-checking
     diagnosticls = {
       filetypes = { "python" },
       init_options = {
@@ -230,9 +229,6 @@ local function setup_servers()
   end
 end
 
--- ------------------------------------------------------------
--- Entry point
--- ------------------------------------------------------------
 local function init()
   setup_diagnostics()
   setup_servers()

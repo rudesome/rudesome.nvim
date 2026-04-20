@@ -1,5 +1,5 @@
 {inputs}: let
-  inherit (inputs.nixpkgs) legacyPackages;
+  inherit inputs;
 in rec {
   mkPkgs = {system}:
     import inputs.nixpkgs {
@@ -17,8 +17,8 @@ in rec {
       src = pkgs.fetchFromGitHub {
         owner = "ej-shafran";
         repo = "compile-mode.nvim";
-        rev = "v5.6.1";
-        sha256 = "sha256-RTzdabpZ+XMUAgLEyd7OWYlFRz6FzP6E8MdIH0NWytc=";
+        rev = "v5.14.0";
+        sha256 = "sha256-cUh3ekDENsVH/XVEHeV7KVKTIlkoht+rHtXnR3C+lGY=";
       };
     };
 
@@ -34,10 +34,8 @@ in rec {
       dependencies = with pkgs.vimPlugins; [
         # languages
         nvim-lspconfig
-
-        # treesitter (legacy API retains nvim-treesitter.configs module)
         nvim-treesitter-context
-        nvim-treesitter-legacy.withAllGrammars
+        nvim-treesitter.withAllGrammars
 
         # completion
         cmp-buffer
@@ -46,10 +44,10 @@ in rec {
         cmp-path
         cmp-tabnine
         cmp-treesitter
-        friendly-snippets   # VSCode-style snippet collection for LuaSnip
+        friendly-snippets
         lspkind-nvim
-        luasnip             # snippet engine (replaces vsnip)
-        cmp_luasnip         # luasnip source for nvim-cmp
+        luasnip
+        cmp_luasnip
         nvim-cmp
 
         # telescope
@@ -65,7 +63,7 @@ in rec {
         # extras
         compile-mode
         gitsigns-nvim
-        harpoon2            # harpoon v2 (Telescope-free, cleaner API)
+        harpoon2
         lualine-nvim
         nerdcommenter
         nui-nvim
