@@ -64,3 +64,4 @@ jobs:
         run: |
           ulimit -n 524288 || true
           nix build '.#packages.aarch64-darwin.${{ matrix.package }}'
+          nix run github:zhaofengli/attic#default -- push cache result -j 2
