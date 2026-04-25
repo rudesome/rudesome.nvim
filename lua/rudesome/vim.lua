@@ -44,8 +44,21 @@ local function set_options()
   opt.splitright     = true
   opt.splitbelow     = true
 
-  -- Clipboard
+  -- Clipboard: use OSC 52 over SSH (works through terminal), xclip locally
   opt.clipboard      = "unnamedplus"
+  if os.getenv("SSH_TTY") then
+    vim.g.clipboard = {
+      name = "OSC 52",
+      copy = {
+        ["+"] = require("vim.ui.clipboard.osc52").copy("+"),
+        ["*"] = require("vim.ui.clipboard.osc52").copy("*"),
+      },
+      paste = {
+        ["+"] = require("vim.ui.clipboard.osc52").paste("+"),
+        ["*"] = require("vim.ui.clipboard.osc52").paste("*"),
+      },
+    }
+  end
 
   -- Completion
   opt.completeopt    = { "menu", "menuone", "noselect" }
