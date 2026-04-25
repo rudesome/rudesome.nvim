@@ -5,9 +5,17 @@ on:
     branches:
       - master
 
+env:
+  EXTRA_SUBSTITUTERS: https://cache.rudesome.nl/cache?priority=41 https://nix-community.cachix.org?priority=42
+  EXTRA_TRUSTED_PUBLIC_KEYS: cache:uz+4bhhavVggsidftGM12+XGcuWdaFM1/ou1w5whovc= nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs=
+
 jobs:
   check:
     runs-on: nix-builder
+    env:
+      NIX_CONFIG: |
+        extra-substituters = ${{ env.EXTRA_SUBSTITUTERS }}
+        extra-trusted-public-keys = ${{ env.EXTRA_TRUSTED_PUBLIC_KEYS }}
     steps:
       - uses: actions/checkout@v6
       - name: flake check all systems

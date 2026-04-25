@@ -6,9 +6,17 @@ on:
       - master
   workflow_dispatch:
 
+env:
+  EXTRA_SUBSTITUTERS: https://cache.rudesome.nl/cache?priority=41 https://nix-community.cachix.org?priority=42
+  EXTRA_TRUSTED_PUBLIC_KEYS: cache:uz+4bhhavVggsidftGM12+XGcuWdaFM1/ou1w5whovc= nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs=
+
 jobs:
   build-linux:
     runs-on: nix-builder
+    env:
+      NIX_CONFIG: |
+        extra-substituters = ${{ env.EXTRA_SUBSTITUTERS }}
+        extra-trusted-public-keys = ${{ env.EXTRA_TRUSTED_PUBLIC_KEYS }}
     strategy:
       fail-fast: false
       matrix:
@@ -50,8 +58,8 @@ jobs:
             fallback = true
             http-connections = 128
             max-substitution-jobs = 128
-            extra-substituters = https://nix-community.cachix.org?priority=42
-            extra-trusted-public-keys = nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs=
+            extra-substituters = ${{ env.EXTRA_SUBSTITUTERS }}
+            extra-trusted-public-keys = ${{ env.EXTRA_TRUSTED_PUBLIC_KEYS }}
 
       - name: Setup Attic cache
         uses: ryanccn/attic-action@v0
