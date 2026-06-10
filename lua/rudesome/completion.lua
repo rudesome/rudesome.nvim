@@ -66,7 +66,6 @@ local function init()
     sources = cmp.config.sources({
       { name = "nvim_lsp",               priority = 1000 },
       { name = "luasnip",                priority = 750  },
-      { name = "nvim_lua",               priority = 500  },
       { name = "path",                   priority = 400  },
     }, {
       { name = "buffer",   keyword_length = 4, priority = 200 },
@@ -81,7 +80,6 @@ local function init()
         menu = {
           nvim_lsp = "[LSP]",
           luasnip  = "[Snip]",
-          nvim_lua = "[Lua]",
           path     = "[Path]",
           buffer   = "[Buf]",
         },

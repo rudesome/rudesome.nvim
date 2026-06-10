@@ -42,8 +42,6 @@ in rec {
         cmp-cmdline
         cmp-nvim-lsp
         cmp-path
-        cmp-tabnine
-        cmp-treesitter
         friendly-snippets
         lspkind-nvim
         luasnip
@@ -65,10 +63,7 @@ in rec {
         gitsigns-nvim
         harpoon2
         lualine-nvim
-        nerdcommenter
-        nui-nvim
         nvim-colorizer-lua
-        nvim-notify
         nvim-web-devicons
       ];
 
