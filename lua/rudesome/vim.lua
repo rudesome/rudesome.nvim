@@ -12,7 +12,6 @@ local function set_options()
   opt.signcolumn     = "yes" -- always show; avoids layout shift
   opt.colorcolumn    = "80"
   opt.cursorline     = true
-  opt.termguicolors  = true
   opt.showmode       = false -- lualine already shows the mode
   opt.wrap           = false
   opt.scrolloff      = 12
@@ -26,8 +25,7 @@ local function set_options()
   opt.smartindent    = true
 
   -- Search
-  opt.hlsearch       = false
-  opt.incsearch      = true
+  opt.hlsearch       = true -- <Esc> clears the highlight (see keymaps)
   opt.ignorecase     = true
   opt.smartcase      = true
 
@@ -44,29 +42,14 @@ local function set_options()
   opt.splitright     = true
   opt.splitbelow     = true
 
-  -- Clipboard: use OSC 52 over SSH (works through terminal), xclip locally
+  -- Clipboard (Neovim 0.10+ falls back to OSC 52 automatically over SSH)
   opt.clipboard      = "unnamedplus"
-  if os.getenv("SSH_TTY") then
-    vim.g.clipboard = {
-      name = "OSC 52",
-      copy = {
-        ["+"] = require("vim.ui.clipboard.osc52").copy("+"),
-        ["*"] = require("vim.ui.clipboard.osc52").copy("*"),
-      },
-      paste = {
-        ["+"] = require("vim.ui.clipboard.osc52").paste("+"),
-        ["*"] = require("vim.ui.clipboard.osc52").paste("*"),
-      },
-    }
-  end
 
   -- Completion
   opt.completeopt    = { "menu", "menuone", "noselect" }
   opt.shortmess:append("c")
 
-  -- Encoding & misc
-  opt.encoding     = "utf-8"
-  opt.fileencoding = "utf-8"
+  -- Misc
   opt.secure       = true
 
   -- Whitespace indicators
@@ -86,7 +69,7 @@ local function set_autocmds()
   api.nvim_create_autocmd("TextYankPost", {
     group    = api.nvim_create_augroup("highlight_yank", { clear = true }),
     callback = function()
-      vim.highlight.on_yank({ timeout = 240 })
+      vim.hl.on_yank({ timeout = 240 })
     end,
   })
 
@@ -95,9 +78,9 @@ local function set_autocmds()
     group    = api.nvim_create_augroup("wrap_in_prose", { clear = true }),
     pattern  = { "markdown", "text", "gitcommit" },
     callback = function()
-      opt.wrap        = true
-      opt.linebreak   = true
-      opt.breakindent = true
+      vim.opt_local.wrap        = true
+      vim.opt_local.linebreak   = true
+      vim.opt_local.breakindent = true
     end,
   })
 
@@ -143,7 +126,6 @@ local function set_keymaps()
   map("v", "K", ":m '<-2<CR>gv=gv", { desc = "Move selection up" })
 
   -- Yank helpers (ThePrimeagen-style)
-  map("n", "Y", "y$", { desc = "Yank to end of line" })
   map("n", "<leader>y", '"+y', { desc = "Yank to system clipboard" })
   map("v", "<leader>y", '"+y', { desc = "Yank selection to system clipboard" })
   map("n", "<leader>Y", 'gg"+yG', { desc = "Yank whole file to system clipboard" })
