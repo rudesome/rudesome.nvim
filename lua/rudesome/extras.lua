@@ -73,8 +73,8 @@ local function setup_harpoon()
   map("n", "<C-n>", function() harpoon:list():select(3) end, { desc = "Harpoon: file 3" })
   map("n", "<C-s>", function() harpoon:list():select(4) end, { desc = "Harpoon: file 4" })
 
-  map("n", "<leader>hp", function() harpoon:list():prev() end, { desc = "Harpoon: prev" })
-  map("n", "<leader>hn", function() harpoon:list():next() end, { desc = "Harpoon: next" })
+  map("n", "[H", function() harpoon:list():prev() end, { desc = "Harpoon: prev" })
+  map("n", "]H", function() harpoon:list():next() end, { desc = "Harpoon: next" })
 end
 
 local function setup_colorizer()
