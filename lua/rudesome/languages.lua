@@ -1,50 +1,34 @@
-local function on_attach(client, bufnr)
-  local map     = vim.keymap.set
-  local buf     = { buffer = bufnr, silent = true }
+local function setup_keymaps()
+  vim.api.nvim_create_autocmd("LspAttach", {
+    group    = vim.api.nvim_create_augroup("rudesome.lsp", { clear = true }),
+    callback = function(args)
+      local buf = args.buf
+      local map = vim.keymap.set
 
-  -- Navigation
-  map("n", "gD",         vim.lsp.buf.declaration,    vim.tbl_extend("force", buf, { desc = "LSP declaration" }))
-  map("n", "gd",         vim.lsp.buf.definition,     vim.tbl_extend("force", buf, { desc = "LSP definition" }))
-  map("n", "gi",         vim.lsp.buf.implementation, vim.tbl_extend("force", buf, { desc = "LSP implementation" }))
-  map("n", "gr",         vim.lsp.buf.references,     vim.tbl_extend("force", buf, { desc = "LSP references" }))
-  map("n", "gy",         vim.lsp.buf.type_definition,vim.tbl_extend("force", buf, { desc = "LSP type definition" }))
+      map("n", "gd", vim.lsp.buf.definition,  { buffer = buf, desc = "LSP definition" })
+      map("n", "gD", vim.lsp.buf.declaration, { buffer = buf, desc = "LSP declaration" })
+      map("n", "<leader>f", function()
+        vim.lsp.buf.format({ async = true })
+      end, { buffer = buf, desc = "LSP format" })
 
-  -- Hover / signature
-  map("n", "K",          vim.lsp.buf.hover,          vim.tbl_extend("force", buf, { desc = "LSP hover" }))
-  map("n", "<C-k>",      vim.lsp.buf.signature_help, vim.tbl_extend("force", buf, { desc = "LSP signature help" }))
-  map("i", "<C-k>",      vim.lsp.buf.signature_help, vim.tbl_extend("force", buf, { desc = "LSP signature help" }))
+      local client = vim.lsp.get_client_by_id(args.data.client_id)
+      if client and client:supports_method("textDocument/documentHighlight") then
+        local group = vim.api.nvim_create_augroup("rudesome.lsp.highlight." .. buf, { clear = true })
 
-  -- Code actions / rename / format
-  map("n", "<leader>rn", vim.lsp.buf.rename,         vim.tbl_extend("force", buf, { desc = "LSP rename" }))
-  map("n", "<leader>ca", vim.lsp.buf.code_action,    vim.tbl_extend("force", buf, { desc = "LSP code action" }))
-  map("v", "<leader>ca", vim.lsp.buf.code_action,    vim.tbl_extend("force", buf, { desc = "LSP code action (range)" }))
-  map("n", "<leader>f",  function()
-    vim.lsp.buf.format({ async = true })
-  end, vim.tbl_extend("force", buf, { desc = "LSP format" }))
+        vim.api.nvim_create_autocmd({ "CursorHold", "CursorHoldI" }, {
+          group    = group,
+          buffer   = buf,
+          callback = vim.lsp.buf.document_highlight,
+        })
 
-  -- Workspace folders
-  map("n", "<leader>wa", vim.lsp.buf.add_workspace_folder,    vim.tbl_extend("force", buf, { desc = "Add workspace folder" }))
-  map("n", "<leader>wr", vim.lsp.buf.remove_workspace_folder, vim.tbl_extend("force", buf, { desc = "Remove workspace folder" }))
-  map("n", "<leader>wl", function()
-    print(vim.inspect(vim.lsp.buf.list_workspace_folders()))
-  end, vim.tbl_extend("force", buf, { desc = "List workspace folders" }))
-
-  -- Document highlight (if server supports it)
-  if client.server_capabilities.documentHighlightProvider then
-    local augroup = vim.api.nvim_create_augroup("lsp_document_highlight_" .. bufnr, { clear = true })
-
-    vim.api.nvim_create_autocmd({ "CursorHold", "CursorHoldI" }, {
-      group    = augroup,
-      buffer   = bufnr,
-      callback = vim.lsp.buf.document_highlight,
-    })
-
-    vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI" }, {
-      group    = augroup,
-      buffer   = bufnr,
-      callback = vim.lsp.buf.clear_references,
-    })
-  end
+        vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI" }, {
+          group    = group,
+          buffer   = buf,
+          callback = vim.lsp.buf.clear_references,
+        })
+      end
+    end,
+  })
 end
 
 local function setup_diagnostics()
@@ -100,36 +84,15 @@ local function setup_diagnostics()
   map("n", "<leader>q", vim.diagnostic.setloclist, { desc = "Diagnostic loclist" })
 end
 
--- ------------------------------------------------------------
--- Language server definitions
--- ------------------------------------------------------------
 local function setup_servers()
-  -- Build capabilities table enhanced with nvim-cmp LSP completions
-  local capabilities = vim.lsp.protocol.make_client_capabilities()
   local ok_cmp, cmp_lsp = pcall(require, "cmp_nvim_lsp")
   if ok_cmp then
-    capabilities = cmp_lsp.default_capabilities(capabilities)
+    vim.lsp.config("*", { capabilities = cmp_lsp.default_capabilities() })
   end
 
   local language_servers = {
     bashls     = {},
     cssls      = {},
-    clangd     = {},
-
-    diagnosticls = {
-      filetypes = { "python" },
-      init_options = {
-        filetypes       = { python = "black" },
-        formatFiletypes = { python = { "black" } },
-        formatters = {
-          black = {
-            command      = "black",
-            args         = { "--quiet", "-" },
-            rootPatterns = { "pyproject.toml" },
-          },
-        },
-      },
-    },
 
     dhall_lsp_server = {},
     dockerls         = {},
@@ -166,7 +129,6 @@ local function setup_servers()
     },
 
     marksman  = {},
-    nickel_ls = {},
 
     nil_ls = {
       settings = {
@@ -183,14 +145,6 @@ local function setup_servers()
     },
 
     ocamllsp = {},
-
-    postgres_lsp = {},
-
-    powershell_es = {
-      config = {
-        bundle_path = "/home/rudesome/PowerShellEditorServices",
-      },
-    },
 
     pyright = {
       settings = {
@@ -218,19 +172,17 @@ local function setup_servers()
   }
 
   -- Register every server using the modern vim.lsp API
-  for server, server_config in pairs(language_servers) do
-    local config = vim.tbl_deep_extend("force", {
-      on_attach    = on_attach,
-      capabilities = capabilities,
-    }, server_config)
-
-    vim.lsp.config(server, config)
+  for server, config in pairs(language_servers) do
+    if next(config) then
+      vim.lsp.config(server, config)
+    end
     vim.lsp.enable(server)
   end
 end
 
 local function init()
   setup_diagnostics()
+  setup_keymaps()
   setup_servers()
 end
 
