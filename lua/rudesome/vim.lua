@@ -12,6 +12,7 @@ local function set_options()
   opt.signcolumn     = "yes" -- always show; avoids layout shift
   opt.colorcolumn    = "80"
   opt.cursorline     = true
+  opt.termguicolors  = true -- required by colorizer (and true-color themes)
   opt.showmode       = false -- lualine already shows the mode
   opt.wrap           = false
   opt.scrolloff      = 12
@@ -25,7 +26,8 @@ local function set_options()
   opt.smartindent    = true
 
   -- Search
-  opt.hlsearch       = true -- <Esc> clears the highlight (see keymaps)
+  opt.hlsearch       = false -- only highlight while typing the search
+  opt.incsearch      = true
   opt.ignorecase     = true
   opt.smartcase      = true
 
@@ -141,9 +143,6 @@ local function set_keymaps()
   map("n", "<leader>bd", "<CMD>bdelete<CR>", { desc = "Delete buffer" })
   map("n", "<leader>bn", "<CMD>bnext<CR>", { desc = "Next buffer" })
   map("n", "<leader>bp", "<CMD>bprevious<CR>", { desc = "Prev buffer" })
-
-  -- Clear search highlight
-  map("n", "<Esc>", "<CMD>nohlsearch<CR>", { desc = "Clear search highlight" })
 
   -- Stay in indent mode after tab in visual
   map("v", "<", "<gv", { desc = "Indent left and reselect" })
