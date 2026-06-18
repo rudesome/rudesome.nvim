@@ -20,7 +20,7 @@ jobs:
           - default
           - neovim
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: build and push
         run: |
@@ -41,7 +41,7 @@ jobs:
           - default
           - neovim
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Raise file descriptor limit
         run: |
