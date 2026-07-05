@@ -1,6 +1,7 @@
 local modules = {
   "rudesome.theme",
   "rudesome.vim",
+  "rudesome.comment",
   "rudesome.treesitter",
   "rudesome.telescope",
   "rudesome.languages",
