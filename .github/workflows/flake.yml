@@ -5,6 +5,9 @@ on:
     branches:
       - master
 
+# `nix flake check --all-systems` evaluates every system but only *builds*
+# checks for the runner's own system, so run it on both platforms.
+# renovate automerge (lockFileMaintenance) waits for all of these to pass.
 jobs:
   check:
     runs-on: nix-builder
@@ -16,3 +19,27 @@ jobs:
       - uses: actions/checkout@v7
       - name: flake check all systems
         run: nix flake check --all-systems
+
+  check-darwin:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Raise file descriptor limit
+        run: |
+          sudo launchctl limit maxfiles 524288 524288 || true
+          ulimit -n 524288 || true
+
+      - uses: DeterminateSystems/nix-installer-action@main
+        with:
+          extra-conf: |
+            fallback = true
+            http-connections = 128
+            max-substitution-jobs = 128
+            extra-substituters = https://cache.rudesome.nl/cache?priority=41 https://nix-community.cachix.org?priority=42
+            extra-trusted-public-keys = cache:uz+4bhhavVggsidftGM12+XGcuWdaFM1/ou1w5whovc= nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs=
+
+      - name: flake check (aarch64-darwin)
+        run: |
+          ulimit -n 524288 || true
+          nix flake check -L

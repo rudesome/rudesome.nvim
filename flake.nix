@@ -18,6 +18,10 @@
       neovim = self.lib.mkNeovim {inherit system;};
     });
 
+    # build all packages during `nix flake check` so CI actually runs the
+    # plugin's require check (doCheck / nvimSkipModules), not just eval
+    checks = forAllSystems (system: self.packages.${system});
+
     apps = forAllSystems (system: {
       nvim = {
         program = "${self.packages.${system}.neovim}/bin/nvim";

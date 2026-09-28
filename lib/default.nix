@@ -91,7 +91,6 @@ in rec {
 
   mkExtraPackages = {system}: let
     pkgs = mkPkgs {inherit system;};
-    inherit (pkgs) python3Packages;
   in [
     # language servers
     pkgs.bash-language-server
@@ -102,7 +101,6 @@ in rec {
     pkgs.lua-language-server
     pkgs.marksman
     pkgs.nil
-    pkgs.nixd
     pkgs.ocamlPackages.ocaml-lsp
     pkgs.pyright
     pkgs.terraform-ls
@@ -112,13 +110,10 @@ in rec {
     pkgs.yaml-language-server
     pkgs.zls
 
-    # formatters
-    pkgs.alejandra
-    pkgs.gofumpt
-    pkgs.golines
-    pkgs.ocamlPackages.ocamlformat
-    pkgs.terraform
-    python3Packages.black
+    # formatters (invoked by the language servers above)
+    pkgs.alejandra # nil_ls
+    pkgs.ocamlPackages.ocamlformat # ocamllsp
+    pkgs.terraform # terraformls (terraform fmt)
   ];
 
   mkExtraConfig = ''
