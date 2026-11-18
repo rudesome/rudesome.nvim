@@ -22,7 +22,7 @@ inputs = {
 
 ```nix
 programs.neovim = inputs.rudesome-nvim.lib.mkHomeManager {
-  system = pkgs.system;
+  system = pkgs.stdenv.hostPlatform.system;
 };
 ```
 
@@ -30,7 +30,7 @@ programs.neovim = inputs.rudesome-nvim.lib.mkHomeManager {
 
 ```nix
 environment.systemPackages = [
-  inputs.rudesome-nvim.packages.${pkgs.system}.neovim
+  inputs.rudesome-nvim.packages.${pkgs.stdenv.hostPlatform.system}.neovim
 ];
 ```
 

@@ -24,13 +24,13 @@ local function setup_gitsigns()
       -- Navigation
       map("n", "]h", function()
         if vim.wo.diff then return "]h" end
-        vim.schedule(gs.next_hunk)
+        vim.schedule(function() gs.nav_hunk("next") end)
         return "<Ignore>"
       end, vim.tbl_extend("force", buf, { expr = true, desc = "Next hunk" }))
 
       map("n", "[h", function()
         if vim.wo.diff then return "[h" end
-        vim.schedule(gs.prev_hunk)
+        vim.schedule(function() gs.nav_hunk("prev") end)
         return "<Ignore>"
       end, vim.tbl_extend("force", buf, { expr = true, desc = "Prev hunk" }))
 
@@ -44,7 +44,8 @@ local function setup_gitsigns()
         gs.reset_hunk({ vim.fn.line("."), vim.fn.line("v") })
       end, vim.tbl_extend("force", buf, { desc = "Reset hunk (range)" }))
       map("n", "<leader>hS", gs.stage_buffer, vim.tbl_extend("force", buf, { desc = "Stage buffer" }))
-      map("n", "<leader>hu", gs.undo_stage_hunk, vim.tbl_extend("force", buf, { desc = "Undo stage hunk" }))
+      -- stage_hunk toggles on already-staged lines (replaces deprecated undo_stage_hunk)
+      map("n", "<leader>hu", gs.stage_hunk, vim.tbl_extend("force", buf, { desc = "Unstage hunk" }))
       map("n", "<leader>hR", gs.reset_buffer, vim.tbl_extend("force", buf, { desc = "Reset buffer" }))
       map("n", "<leader>hp", gs.preview_hunk, vim.tbl_extend("force", buf, { desc = "Preview hunk" }))
       map("n", "<leader>hb", function() gs.blame_line({ full = true }) end,
@@ -54,7 +55,7 @@ local function setup_gitsigns()
       map("n", "<leader>hD", function() gs.diffthis("~") end, vim.tbl_extend("force", buf, { desc = "Diff this ~" }))
 
       -- Text objects
-      map({ "o", "x" }, "ih", ":<C-U>Gitsigns select_hunk<CR>", vim.tbl_extend("force", buf, { desc = "Select hunk" }))
+      map({ "o", "x" }, "ih", gs.select_hunk, vim.tbl_extend("force", buf, { desc = "Select hunk" }))
     end,
   })
 end
@@ -121,7 +122,7 @@ local function setup_lualine()
       lualine_c = { "filename" },
       lualine_x = { "location" },
     },
-    extensions = { "quickfix", "man", "fzf" },
+    extensions = { "quickfix", "man" },
   })
 end
 

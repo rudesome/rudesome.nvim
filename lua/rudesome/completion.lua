@@ -11,6 +11,8 @@ local function init()
       and vim.api.nvim_buf_get_lines(0, line - 1, line, true)[1]:sub(col, col):match("%S") ~= nil
   end
 
+  vim.api.nvim_set_hl(0, "CmpGhostText", { link = "Comment", default = true })
+
   cmp.setup({
     snippet = {
       expand = function(args)

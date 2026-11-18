@@ -46,12 +46,6 @@ local function setup_diagnostics()
         [severity.HINT]  = " ",
         [severity.INFO]  = " ",
       },
-      texthl = {
-        [severity.ERROR] = "DiagnosticSignError",
-        [severity.WARN]  = "DiagnosticSignWarn",
-        [severity.HINT]  = "DiagnosticSignHint",
-        [severity.INFO]  = "DiagnosticSignInfo",
-      },
       numhl = {
         [severity.ERROR] = "DiagnosticSignError",
         [severity.WARN]  = "DiagnosticSignWarn",
@@ -66,7 +60,7 @@ local function setup_diagnostics()
       focusable = false,
       style     = "minimal",
       border    = "rounded",
-      source    = "always",
+      source    = true,
       header    = "",
       prefix    = "",
     },
@@ -117,9 +111,8 @@ local function setup_servers()
       settings = {
         Lua = {
           runtime     = { version = "LuaJIT" },
-          diagnostics = { globals = { "vim" } },
           workspace   = {
-            library          = vim.api.nvim_get_runtime_file("", true),
+            library          = { vim.env.VIMRUNTIME },
             checkThirdParty  = false,
           },
           telemetry   = { enable = false },

@@ -54,35 +54,34 @@ local function init()
   -- Keymaps
   -- -------------------------------------------------------
   local map = vim.keymap.set
-  local opts = { noremap = true, silent = true }
 
   -- Files
-  map("n", "<leader>fg", builtin.git_files,                           vim.tbl_extend("force", opts, { desc = "Git files" }))
-  map("n", "<leader>ff", builtin.find_files,                          vim.tbl_extend("force", opts, { desc = "Find files" }))
-  map("n", "<leader>fl", builtin.live_grep,                           vim.tbl_extend("force", opts, { desc = "Live grep" }))
-  map("n", "<leader>fb", builtin.buffers,                             vim.tbl_extend("force", opts, { desc = "Buffers" }))
-  map("n", "<leader>fh", builtin.help_tags,                           vim.tbl_extend("force", opts, { desc = "Help tags" }))
-  map("n", "<leader>fr", builtin.registers,                           vim.tbl_extend("force", opts, { desc = "Registers" }))
-  map("n", "<leader>fo", builtin.oldfiles,                            vim.tbl_extend("force", opts, { desc = "Recent files" }))
-  map("n", "<leader>fk", builtin.keymaps,                             vim.tbl_extend("force", opts, { desc = "Keymaps" }))
-  map("n", "<leader>fs", builtin.grep_string,                         vim.tbl_extend("force", opts, { desc = "Grep word under cursor" }))
+  map("n", "<leader>fg", builtin.git_files,                           { desc = "Git files" })
+  map("n", "<leader>ff", builtin.find_files,                          { desc = "Find files" })
+  map("n", "<leader>fl", builtin.live_grep,                           { desc = "Live grep" })
+  map("n", "<leader>fb", builtin.buffers,                             { desc = "Buffers" })
+  map("n", "<leader>fh", builtin.help_tags,                           { desc = "Help tags" })
+  map("n", "<leader>fr", builtin.registers,                           { desc = "Registers" })
+  map("n", "<leader>fo", builtin.oldfiles,                            { desc = "Recent files" })
+  map("n", "<leader>fk", builtin.keymaps,                             { desc = "Keymaps" })
+  map("n", "<leader>fs", builtin.grep_string,                         { desc = "Grep word under cursor" })
   map("n", "<leader>f/", function()
     builtin.current_buffer_fuzzy_find(require("telescope.themes").get_dropdown({
       winblend = 10,
       previewer = false,
     }))
-  end, vim.tbl_extend("force", opts, { desc = "Fuzzy find in buffer" }))
+  end, { desc = "Fuzzy find in buffer" })
 
   -- Diagnostics
-  map("n", "<leader>fd", builtin.diagnostics,                         vim.tbl_extend("force", opts, { desc = "Workspace diagnostics" }))
+  map("n", "<leader>fd", builtin.diagnostics,                         { desc = "Workspace diagnostics" })
 
   -- LSP pickers (modern names – lsp_code_actions was removed; use vim.lsp.buf.code_action)
-  map("n", "<leader>lsd", builtin.lsp_definitions,                    vim.tbl_extend("force", opts, { desc = "LSP definitions" }))
-  map("n", "<leader>lsi", builtin.lsp_implementations,                vim.tbl_extend("force", opts, { desc = "LSP implementations" }))
-  map("n", "<leader>lst", builtin.lsp_type_definitions,               vim.tbl_extend("force", opts, { desc = "LSP type definitions" }))
-  map("n", "<leader>lsr", builtin.lsp_references,                     vim.tbl_extend("force", opts, { desc = "LSP references" }))
-  map("n", "<leader>lss", builtin.lsp_document_symbols,               vim.tbl_extend("force", opts, { desc = "LSP document symbols" }))
-  map("n", "<leader>lsw", builtin.lsp_workspace_symbols,              vim.tbl_extend("force", opts, { desc = "LSP workspace symbols" }))
+  map("n", "<leader>lsd", builtin.lsp_definitions,                    { desc = "LSP definitions" })
+  map("n", "<leader>lsi", builtin.lsp_implementations,                { desc = "LSP implementations" })
+  map("n", "<leader>lst", builtin.lsp_type_definitions,               { desc = "LSP type definitions" })
+  map("n", "<leader>lsr", builtin.lsp_references,                     { desc = "LSP references" })
+  map("n", "<leader>lss", builtin.lsp_document_symbols,               { desc = "LSP document symbols" })
+  map("n", "<leader>lsw", builtin.lsp_workspace_symbols,              { desc = "LSP workspace symbols" })
 end
 
 return { init = init }

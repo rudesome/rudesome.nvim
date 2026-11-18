@@ -34,7 +34,8 @@ local function init()
 
   -- Toggle / cycle existing floaterms
   map("n", "<leader>tf", "<CMD>FloatermToggle<CR>", { desc = "Floaterm: toggle" })
-  map("t", "<leader>tf", "<CMD>FloatermToggle<CR>", { desc = "Floaterm: toggle" })
+  -- no <leader> in terminal mode: it would delay every typed space by timeoutlen
+  map("t", "<C-\\>t", "<CMD>FloatermToggle<CR>", { desc = "Floaterm: toggle" })
   map("n", "<leader>tn", "<CMD>FloatermNext<CR>", { desc = "Floaterm: next" })
   map("n", "<leader>tp", "<CMD>FloatermPrev<CR>", { desc = "Floaterm: prev" })
 end

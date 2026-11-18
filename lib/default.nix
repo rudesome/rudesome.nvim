@@ -1,6 +1,4 @@
-{inputs}: let
-  inherit inputs;
-in rec {
+{inputs}: rec {
   mkPkgs = {system}:
     import inputs.nixpkgs {
       inherit system;
@@ -11,14 +9,15 @@ in rec {
     pkgs = mkPkgs {inherit system;};
   in
     pkgs.vimUtils.buildVimPlugin {
-      name = "compile-mode";
+      pname = "compile-mode";
+      version = "5.16.0";
       doCheck = true;
       dependencies = with pkgs.vimPlugins; [plenary-nvim];
       src = pkgs.fetchFromGitHub {
         owner = "ej-shafran";
         repo = "compile-mode.nvim";
-        rev = "v5.14.0";
-        sha256 = "sha256-cUh3ekDENsVH/XVEHeV7KVKTIlkoht+rHtXnR3C+lGY=";
+        rev = "v5.16.0";
+        hash = "sha256-rVDVo734ig5eNsJ2/vMGllxOcgvJvI3tw6ApOZ6sl3o=";
       };
     };
 
@@ -28,8 +27,12 @@ in rec {
   in
     pkgs.vimUtils.buildVimPlugin {
       doCheck = true;
-      name = "rudesome";
-      src = ../.;
+      pname = "rudesome";
+      version = "0-unstable";
+      src = pkgs.lib.fileset.toSource {
+        root = ../.;
+        fileset = ../lua;
+      };
 
       dependencies = with pkgs.vimPlugins; [
         # languages
@@ -68,18 +71,9 @@ in rec {
       ];
 
       nvimSkipModules = [
-        "init"
         "rudesome.languages"
         "rudesome.treesitter"
       ];
-
-      postInstall = ''
-        rm -rf $out/.gitignore
-        rm -rf $out/README.md
-        rm -rf $out/flake.lock
-        rm -rf $out/flake.nix
-        rm -rf $out/lib
-      '';
     };
 
   mkNeovimPlugins = {system}: let
@@ -134,9 +128,10 @@ in rec {
         packages.main = {inherit start;};
       };
       extraMakeWrapperArgs = ''--suffix PATH : "${lib.makeBinPath extraPackages}"'';
-      withNodeJs = true;
-      withPython3 = true;
-      withRuby = true;
+      # no plugin needs the remote-plugin providers
+      withNodeJs = false;
+      withPython3 = false;
+      withRuby = false;
     };
 
   mkHomeManager = {system}: let
@@ -147,8 +142,8 @@ in rec {
     inherit extraConfig extraPackages plugins;
     defaultEditor = true;
     enable = true;
-    withNodeJs = true;
-    withPython3 = true;
-    withRuby = true;
+    withNodeJs = false;
+    withPython3 = false;
+    withRuby = false;
   };
 }

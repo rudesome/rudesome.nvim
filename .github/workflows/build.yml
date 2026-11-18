@@ -24,12 +24,12 @@ jobs:
 
       - name: build and push
         run: |
-          nix run github:zhaofengli/attic#default -- \
+          nix run --inputs-from . nixpkgs#attic-client -- \
             login cache https://cache.rudesome.nl ${{ secrets.ATTIC_TOKEN }}
-          nix run github:zhaofengli/attic#default -- watch-store cache &
+          nix run --inputs-from . nixpkgs#attic-client -- watch-store cache &
           WATCH_PID=$!
           nix build '.#packages.x86_64-linux.${{ matrix.package }}'
-          nix run github:zhaofengli/attic#default -- push cache result -j 2
+          nix run --inputs-from . nixpkgs#attic-client -- push cache result -j 2
           kill $WATCH_PID || true
 
   build-darwin:
@@ -48,7 +48,7 @@ jobs:
           sudo launchctl limit maxfiles 524288 524288 || true
           ulimit -n 524288 || true
 
-      - uses: DeterminateSystems/nix-installer-action@main
+      - uses: DeterminateSystems/nix-installer-action@v23
         with:
           extra-conf: |
             fallback = true
@@ -67,5 +67,5 @@ jobs:
       - name: build
         run: |
           ulimit -n 524288 || true
+          # attic-action pushes new store paths in its post step
           nix build '.#packages.aarch64-darwin.${{ matrix.package }}'
-          nix run github:zhaofengli/attic#default -- push cache result -j 2

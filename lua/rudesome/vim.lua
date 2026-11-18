@@ -27,12 +27,10 @@ local function set_options()
 
   -- Search
   opt.hlsearch       = false -- only highlight while typing the search
-  opt.incsearch      = true
   opt.ignorecase     = true
   opt.smartcase      = true
 
   -- Files / buffers
-  opt.hidden         = true
   opt.swapfile       = false
   opt.backup         = false
   opt.writebackup    = false
@@ -135,9 +133,6 @@ local function set_keymaps()
   -- Delete to black hole register (don't pollute yank register)
   map("n", "<leader>d", '"_d', { desc = "Delete to void" })
   map("v", "<leader>d", '"_d', { desc = "Delete selection to void" })
-
-  -- Quick config reload
-  map("n", "<leader>sv", "<CMD>source $MYVIMRC<CR>", { desc = "Source init.lua" })
 
   -- Buffer management
   map("n", "<leader>bd", "<CMD>bdelete<CR>", { desc = "Delete buffer" })

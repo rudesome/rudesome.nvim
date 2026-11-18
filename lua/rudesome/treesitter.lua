@@ -7,35 +7,20 @@ local function file_too_large(buf)
 end
 
 local function init()
-  local augroup = vim.api.nvim_create_augroup("rudesome.treesitter", { clear = true })
-
   vim.api.nvim_create_autocmd("FileType", {
-     group    = augroup,
-     callback = function(args)
+    group    = vim.api.nvim_create_augroup("rudesome.treesitter", { clear = true }),
+    callback = function(args)
       local buf = args.buf
       local lang = vim.treesitter.language.get_lang(vim.bo[buf].filetype)
-      if not lang then
-        return
-      end
-
       -- Skip very large files to keep the UI responsive.
-      if file_too_large(buf) then
+      if not lang or file_too_large(buf) then
         return
       end
 
-      pcall(vim.treesitter.start, buf, lang)
-    end,
-  })
-
-  -- Indentation: replaces the legacy `indent = { enable = true }` block.
-  vim.api.nvim_create_autocmd("FileType", {
-     group    = augroup,
-     callback = function(args)
-      local lang = vim.treesitter.language.get_lang(vim.bo[args.buf].filetype)
-      if not lang then
-        return
+      -- get_lang falls back to the filetype name, so only take over indent when a parser actually started
+      if pcall(vim.treesitter.start, buf, lang) then
+        vim.bo[buf].indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
       end
-      vim.bo[args.buf].indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
     end,
   })
 
@@ -47,7 +32,6 @@ local function init()
     multiline_threshold = 1,
     trim_scope          = "outer",
     mode                = "cursor",
-    separator           = nil,
     zindex              = 20,
   })
 end

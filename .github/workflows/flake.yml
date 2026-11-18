@@ -30,7 +30,7 @@ jobs:
           sudo launchctl limit maxfiles 524288 524288 || true
           ulimit -n 524288 || true
 
-      - uses: DeterminateSystems/nix-installer-action@main
+      - uses: DeterminateSystems/nix-installer-action@v23
         with:
           extra-conf: |
             fallback = true

@@ -30,12 +30,6 @@
       };
     });
 
-    devShells = forAllSystems (system: {
-      default = nixpkgs.legacyPackages.${system}.mkShell {
-        buildInputs = [];
-      };
-    });
-
     formatter = forAllSystems (system: nixpkgs.legacyPackages.${system}.alejandra);
   };
 }
