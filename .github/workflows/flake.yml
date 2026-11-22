@@ -10,6 +10,8 @@ on:
 # renovate automerge (lockFileMaintenance) waits for all of these to pass.
 jobs:
   check:
+    # Self-hosted runner sits on the home LAN: never run code from fork PRs on it.
+    if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: nix-builder
     env:
       NIX_CONFIG: |
